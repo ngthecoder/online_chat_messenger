@@ -5,6 +5,17 @@ import (
 	"net"
 )
 
+type User struct {
+	Usernamelen int
+	Username    string
+	IP          *net.UDPAddr
+}
+
+type Message struct {
+	Username string
+	Content  string
+}
+
 func main() {
 	serverAddr := &net.UDPAddr{
 		IP:   net.ParseIP("127.0.0.1"),
@@ -21,12 +32,22 @@ func main() {
 
 	for {
 		buff := make([]byte, 1024)
-		n, clientAddr, err := conn.ReadFromUDP(buff)
+		_, clientAddr, err := conn.ReadFromUDP(buff)
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
 		}
-		fmt.Printf("Received %s from %s", string(buff[:n]), clientAddr.IP)
-		conn.WriteToUDP(buff[:n], clientAddr)
+		user := User{
+			Usernamelen: int(buff[0]),
+			Username:    string(buff[1 : 1+int(buff[0])]),
+			IP:          clientAddr,
+		}
+		message := Message{
+			Username: string(buff[1 : 1+int(buff[0])]),
+			Content:  string(buff[1+int(buff[0]):]),
+		}
+		fmt.Println(user)
+		fmt.Println(message)
+		conn.WriteToUDP([]byte(message.Content), clientAddr)
 	}
 }
