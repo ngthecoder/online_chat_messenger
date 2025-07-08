@@ -41,6 +41,6 @@ func main() {
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 		}
-		fmt.Printf("Received %s\n", string(buff[:n]))
+		fmt.Printf("Received: %s\n", string(buff[:n]))
 	}
 }

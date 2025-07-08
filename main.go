@@ -30,6 +30,8 @@ func main() {
 	defer conn.Close()
 	fmt.Println("UDP server listening on :8080")
 
+	users := make(map[string]User)
+
 	for {
 		buff := make([]byte, 1024)
 		_, clientAddr, err := conn.ReadFromUDP(buff)
@@ -42,12 +44,19 @@ func main() {
 			Username:    string(buff[1 : 1+int(buff[0])]),
 			IP:          clientAddr,
 		}
+		if _, exist := users[user.Username]; !exist {
+			users[user.Username] = user
+		}
+
 		message := Message{
 			Username: string(buff[1 : 1+int(buff[0])]),
 			Content:  string(buff[1+int(buff[0]):]),
 		}
+
 		fmt.Println(user)
 		fmt.Println(message)
-		conn.WriteToUDP([]byte(message.Content), clientAddr)
+		for _, individualUser := range users {
+			conn.WriteToUDP([]byte(message.Username+": "+message.Content), individualUser.IP)
+		}
 	}
 }
