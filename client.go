@@ -7,19 +7,6 @@ import (
 	"os"
 )
 
-type ChatroomHeader struct {
-	RoomNameSize         byte
-	Operation            byte
-	State                byte
-	OperationPayloadSize [29]byte
-}
-
-type ChatroomRequest struct {
-	Header   ChatroomHeader
-	RoomName string
-	Payload  []byte
-}
-
 func main() {
 	// TCP server for chatroom
 	tcpServerAddr := &net.TCPAddr{
@@ -48,6 +35,31 @@ func main() {
 		chatroomName = scanner.Text()
 	}
 
+	request := []byte{}
+	request = append(request, byte(len(chatroomName)))
+	request = append(request, byte(0))
+	request = append(request, byte(0))
+	for i := 0; i < 29; i++ {
+		request = append(request, byte(0))
+	}
+	request = append(request, []byte(chatroomName)...)
+	tcpConn.Write([]byte(request))
+
+	tcpResponse := make([]byte, 1024)
+	_, err = tcpConn.Read(tcpResponse)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+	}
+
+	operation := tcpResponse[0]
+	state := tcpResponse[1]
+	load := tcpResponse[2:]
+	fmt.Println(operation)
+	fmt.Println(state)
+	fmt.Println(load)
+}
+
+func connectUDP() {
 	// UDP server for messaging
 	udpServerAddr := &net.UDPAddr{
 		IP:   net.ParseIP("127.0.0.1"),
@@ -61,6 +73,7 @@ func main() {
 	defer udpConn.Close()
 
 	fmt.Printf("Enter username: ")
+	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Scan()
 	username := scanner.Text()
 
@@ -76,11 +89,11 @@ func main() {
 
 		udpConn.Write(load)
 
-		buff := make([]byte, 1024)
-		n, err := udpConn.Read(buff)
+		udpResponse := make([]byte, 1024)
+		udpResponseSize, err := udpConn.Read(udpResponse)
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 		}
-		fmt.Printf("Received: %s\n", string(buff[:n]))
+		fmt.Printf("Received: %s\n", string(udpResponse[:udpResponseSize]))
 	}
 }
