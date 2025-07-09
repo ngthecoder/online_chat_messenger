@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"net"
+	"time"
 )
 
 func main() {
@@ -51,9 +53,10 @@ func handleTCPConn(tcpConn net.Conn) {
 	fmt.Println(payload)
 
 	responce := []byte{}
-	responce = append(responce, operation)
-	responce = append(responce, state)
-	responce = append(responce, payload...)
+	responce = append(responce, byte(1))
+	responce = append(responce, byte(1))
+	token := randSeq(30)
+	responce = append(responce, []byte(token)...)
 	tcpConn.Write(responce)
 }
 
@@ -101,4 +104,15 @@ func handleUDPConn() {
 			messageConn.WriteToUDP([]byte(message.Username+": "+message.Content), individualUser.IP)
 		}
 	}
+}
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func randSeq(n int) string {
+	rand.Seed(time.Now().UnixNano())
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }
