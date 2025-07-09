@@ -36,5 +36,5 @@ type ChatroomRequest struct {
 type ChatroomResponse struct {
 	Operation            byte
 	State                byte
-	OperationPayloadSize [29]byte
+	OperationPayloadSize [30]byte
 }
